@@ -16,6 +16,8 @@
 
 #include <stdio.h>
 #include <freeglut.h>
+#include <glm/glm.hpp>
+#include <iostream>
 
 //*********************************************************************************
 //	Pocetna tocka Lx[1], Ly[1] Krajnja tocke Lx[2], Ly[2] linije.
@@ -108,12 +110,6 @@ void myReshape(int w, int h)
 
 void myLine(GLint xa, GLint ya, GLint xb, GLint yb)
 {
-	glBegin(GL_LINES);
-	{
-		glVertex2i(xa, ya + 5);			//	crtanje gotove linije
-		glVertex2i(xb, yb + 5);
-	}
-	glEnd();
 
 	GLint	x = xa;                        		//	Bresenhamov algoritam do 45  
 	GLint	y = ya;
@@ -121,19 +117,72 @@ void myLine(GLint xa, GLint ya, GLint xb, GLint yb)
 	GLint	dx = xb - xa;
 	GLint	dy = yb - ya;
 
-	GLdouble	d = dy / (double)dx - 0.5;
+	GLint 	incx = 1;
+	GLint 	incy = 1;
+
+	if (dx < 0) {
+		incx = -1;
+		dx = -dx;
+	}				//	korak u x smjeru
+	if (dy < 0) {
+		incy = -1;
+		dy = -dy;
+	}//	korak u y smjeru
+
+	GLdouble	d;
+
+	bool swap = false;
+	
+	if (dy > dx) {
+		GLint tmp = dx;
+		dx = dy;
+		dy = tmp;
+		swap = true;
+	}
+
+	glBegin(GL_LINES);
+	{
+		if (swap) {
+			glVertex2i(xa + 5, ya );			//	crtanje gotove linije
+			glVertex2i(xb + 5, yb);
+		}
+		else {
+			glVertex2i(xa, ya + 5);			//	crtanje gotove linije
+			glVertex2i(xb, yb + 5);
+		}
+	}
+	glEnd();
+	
+
+	d = dy / (double)dx - 0.5;
 
 	glBegin(GL_POINTS);
 	for (int i = 0; i <= dx; i++)
 	{
 		glVertex2i(x, y);
-		if (d > 0)
+
+		if (d >= 0)
 		{
-			y++;
+			if (swap) {
+				x += incx;
+			}
+			else {
+				y += incy;
+			}
 			d = d - 1.0;
+
 		}
-		x++;
+
+		if (swap) {
+			y += incy;
+		}
+		else {
+			x += incx;
+		}
 		d += dy / (double)dx;
+
+		
+		
 	}
 	glEnd();
 }
@@ -157,7 +206,7 @@ void myMouse(int button, int state, int x, int y)
 		if (Ix == 0)	myLine((int)Lx[0], (int)Ly[0], (int)Lx[1], (int)Ly[1]);
 		else			glVertex2i(x, height - y);
 
-		printf("Koordinate tocke %d: %d %d \n", Ix ^ 1, x, y);
+		//printf("Koordinate tocke %d: %d %d \n", Ix ^ 1, x, y);
 
 		glFlush();
 	}
